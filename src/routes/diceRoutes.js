@@ -1,8 +1,9 @@
 const express = require("express");
-const dicePoolService = require("../services/dicePoolService");
+const poolManager = require("../services/poolManager");
 const { diceRollLimiter } = require("../middleware/rateLimiter");
 const { config } = require("../config/config");
 const { BadRequestError } = require("../utils/error-classes");
+const auth = require("../middleware/auth");
 
 const router = express.Router();
 
@@ -46,28 +47,49 @@ router.get("/health", (req, res) => {
   console.log(`[API] Health check requested from ${req.ip}`);
   res.json({
     status: "OK",
-    poolStatus: dicePoolService.getPoolStatus(),
     timestamp: new Date().toISOString(),
   });
 });
 
+// Optional authentication middleware
+const optionalAuth = async (req, res, next) => {
+  try {
+    await auth(req, res, next);
+  } catch (error) {
+    // If authentication fails, continue without user (anonymous access)
+    req.user = null;
+    next();
+  }
+};
+
 router.post(
   "/roll",
   diceRollLimiter,
+  optionalAuth,
   validateDiceQuantities,
   async (req, res, next) => {
     const startTime = Date.now();
 
     try {
       const { diceQuantities } = req.body;
+      const userId = req.user ? req.user._id : null;
 
-      console.log(`[API] Dice roll requested from ${req.ip}:`, diceQuantities);
+      console.log(
+        `[API] Dice roll requested from ${req.ip}${
+          userId ? ` (user: ${userId})` : " (anonymous)"
+        }:`,
+        diceQuantities
+      );
 
       const results = [];
 
       for (const [dieType, quantity] of Object.entries(diceQuantities)) {
         if (quantity > 0) {
-          const numbers = await dicePoolService.getNumbers(dieType, quantity);
+          const numbers = await poolManager.getNumbers(
+            dieType,
+            quantity,
+            userId
+          );
           results.push({
             diceType: dieType,
             quantity,
@@ -96,24 +118,58 @@ router.post(
   }
 );
 
-// Get pool status
-router.get("/pools", (req, res) => {
-  console.log(`[API] Pool status requested from ${req.ip}`);
+// Get public pool status (no authentication required)
+router.get("/pools/public", async (req, res, next) => {
+  try {
+    console.log(`[API] Public pool status requested from ${req.ip}`);
 
-  res.json({
-    poolStatus: dicePoolService.getPoolStatus(),
-    timestamp: new Date().toISOString(),
-  });
+    const poolStatus = await poolManager.getPoolStatus();
+    const stats = await poolManager.getStats();
+
+    res.json({
+      poolStatus,
+      usageStats: stats.usageStats,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Get user pool status (authentication required)
+router.get("/pools/user", auth, async (req, res, next) => {
+  try {
+    console.log(
+      `[API] User pool status requested from ${req.ip} (user: ${req.user._id})`
+    );
+
+    const poolStatus = await poolManager.getPoolStatus(req.user._id);
+    const stats = await poolManager.getStats();
+
+    res.json({
+      poolStatus,
+      usageStats: stats.usageStats,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    next(error);
+  }
 });
 
 // Get service stats
-router.get("/stats", (req, res) => {
-  console.log(`[API] Stats requested from ${req.ip}`);
+router.get("/stats", async (req, res, next) => {
+  try {
+    console.log(`[API] Stats requested from ${req.ip}`);
 
-  res.json({
-    stats: dicePoolService.getStats(),
-    timestamp: new Date().toISOString(),
-  });
+    const stats = await poolManager.getStats();
+
+    res.json({
+      stats,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    next(error);
+  }
 });
 
 module.exports = router;
