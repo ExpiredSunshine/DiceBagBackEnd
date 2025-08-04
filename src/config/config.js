@@ -34,8 +34,20 @@ const config = {
   },
 
   // Dice Pool Configuration
-  poolSize: 100, // Number of random numbers to fetch per API call
+  poolSize: 100, // Number of random numbers to fetch per API call (legacy)
   maxDicePerRoll: 100, // Maximum dice that can be rolled in one request
+  
+  // Dual Pool Configuration
+  pools: {
+    public: {
+      size: 500, // Number of random numbers to fetch per API call for public pools
+      dailyLimit: 50, // Daily roll limit for anonymous users
+    },
+    user: {
+      size: 1000, // Number of random numbers to fetch per API call for user pools
+      dailyLimit: null, // No daily limit for authenticated users
+    },
+  },
 };
 
 // Validate required configuration
