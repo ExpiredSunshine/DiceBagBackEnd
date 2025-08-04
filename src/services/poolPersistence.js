@@ -70,59 +70,62 @@ class PoolPersistenceService {
   }
 
   /**
-   * Get today's usage record or create a new one
-   * @returns {Promise<Object>} The usage document for today
+   * Get today's usage record for a specific IP or create a new one
+   * @param {string} ipAddress - The IP address to track
+   * @returns {Promise<Object>} The usage document for today and IP
    */
-  async getOrCreateTodayUsage() {
+  async getOrCreateTodayUsage(ipAddress) {
     try {
       const today = new Date();
       today.setHours(0, 0, 0, 0); // Start of day
       
-      let usage = await PoolUsage.findOne({ date: today });
+      let usage = await PoolUsage.findOne({ date: today, ipAddress });
       
       if (!usage) {
-        usage = new PoolUsage({ date: today });
+        usage = new PoolUsage({ date: today, ipAddress });
         await usage.save();
-        console.log(`[PoolPersistence] Created new usage record for ${today.toDateString()}`);
+        console.log(`[PoolPersistence] Created new usage record for IP ${ipAddress} on ${today.toDateString()}`);
       }
       
       return usage;
     } catch (error) {
-      console.error(`[PoolPersistence] Error getting/creating today's usage:`, error.message);
+      console.error(`[PoolPersistence] Error getting/creating today's usage for IP ${ipAddress}:`, error.message);
       throw error;
     }
   }
 
   /**
-   * Increment today's roll count
+   * Increment today's roll count for a specific IP
    * @param {number} increment - Number of rolls to add
+   * @param {string} ipAddress - The IP address to track
    */
-  async incrementTodayUsage(increment = 1) {
+  async incrementTodayUsage(increment = 1, ipAddress) {
     try {
-      const usage = await this.getOrCreateTodayUsage();
+      const usage = await this.getOrCreateTodayUsage(ipAddress);
       usage.totalRolls += increment;
       await usage.save();
       
-      console.log(`[PoolPersistence] Incremented today's usage by ${increment}, total: ${usage.totalRolls}`);
+      console.log(`[PoolPersistence] Incremented today's usage for IP ${ipAddress} by ${increment}, total: ${usage.totalRolls}`);
     } catch (error) {
-      console.error(`[PoolPersistence] Error incrementing today's usage:`, error.message);
+      console.error(`[PoolPersistence] Error incrementing today's usage for IP ${ipAddress}:`, error.message);
       throw error;
     }
   }
 
   /**
-   * Get today's total roll count
-   * @returns {Promise<number>} Today's total rolls
+   * Get today's total roll count for a specific IP
+   * @param {string} ipAddress - The IP address to check
+   * @returns {Promise<number>} Today's total rolls for this IP
    */
-  async getTodayUsage() {
+  async getTodayUsage(ipAddress) {
     try {
       const today = new Date();
       today.setHours(0, 0, 0, 0); // Start of day
       
-      const usage = await PoolUsage.findOne({ date: today });
+      const usage = await PoolUsage.findOne({ date: today, ipAddress });
       return usage ? usage.totalRolls : 0;
     } catch (error) {
-      console.error(`[PoolPersistence] Error getting today's usage:`, error.message);
+      console.error(`[PoolPersistence] Error getting today's usage for IP ${ipAddress}:`, error.message);
       return 0;
     }
   }

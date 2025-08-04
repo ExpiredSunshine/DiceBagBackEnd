@@ -140,9 +140,10 @@ class PoolManagerService {
    * @param {string} dieType - Which die type to get numbers for
    * @param {number} quantity - How many numbers to get
    * @param {string} userId - User ID (null for public pool)
+   * @param {string} ipAddress - IP address for usage tracking (only for public pool)
    * @returns {Promise<Array<number>>} Array of random numbers
    */
-  async getNumbers(dieType, quantity, userId = null) {
+  async getNumbers(dieType, quantity, userId = null, ipAddress = null) {
     // Validate quantity
     if (quantity <= 0) {
       return [];
@@ -161,7 +162,7 @@ class PoolManagerService {
 
     // Validate roll request for public pool
     if (!userId) {
-      await usageTracker.validateRollRequest(quantity, true);
+      await usageTracker.validateRollRequest(quantity, true, ipAddress);
     }
 
     // Get the requested number of random numbers
@@ -171,7 +172,7 @@ class PoolManagerService {
     }
 
     // Record the rolls
-    await usageTracker.recordRoll(quantity, !userId);
+    await usageTracker.recordRoll(quantity, !userId, ipAddress);
 
     return results;
   }
@@ -199,10 +200,11 @@ class PoolManagerService {
 
   /**
    * Get comprehensive statistics about the service
+   * @param {string} ipAddress - IP address for usage stats (optional)
    * @returns {Promise<Object>} Complete statistics
    */
-  async getStats() {
-    const usageStats = await usageTracker.getUsageStats();
+  async getStats(ipAddress = null) {
+    const usageStats = await usageTracker.getUsageStats(ipAddress);
 
     return {
       ...this.stats,

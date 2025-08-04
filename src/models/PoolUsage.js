@@ -5,7 +5,10 @@ const poolUsageSchema = new mongoose.Schema(
     date: {
       type: Date,
       required: true,
-      unique: true,
+    },
+    ipAddress: {
+      type: String,
+      required: true,
     },
     totalRolls: {
       type: Number,
@@ -18,7 +21,7 @@ const poolUsageSchema = new mongoose.Schema(
   }
 );
 
-// Index for efficient date-based queries
-poolUsageSchema.index({ date: 1 });
+// Compound index for efficient date + IP queries
+poolUsageSchema.index({ date: 1, ipAddress: 1 }, { unique: true });
 
 module.exports = mongoose.model("PoolUsage", poolUsageSchema); 

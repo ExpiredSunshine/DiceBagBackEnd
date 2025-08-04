@@ -94,7 +94,8 @@ router.post(
           const numbers = await poolManager.getNumbers(
             dieType,
             quantity,
-            userId
+            userId,
+            req.ip
           );
           results.push({
             diceType: dieType,
@@ -130,7 +131,7 @@ router.get("/pools/public", async (req, res, next) => {
     console.log(`[API] Public pool status requested from ${req.ip}`);
 
     const poolStatus = await poolManager.getPoolStatus();
-    const stats = await poolManager.getStats();
+    const stats = await poolManager.getStats(req.ip);
 
     res.json({
       poolStatus,
@@ -150,7 +151,7 @@ router.get("/pools/user", auth, async (req, res, next) => {
     );
 
     const poolStatus = await poolManager.getPoolStatus(req.user._id);
-    const stats = await poolManager.getStats();
+    const stats = await poolManager.getStats(req.ip);
 
     res.json({
       poolStatus,
