@@ -61,7 +61,7 @@ class DicePoolService {
       console.log(`[DicePool] Starting refill for ${dieType}`);
 
       // call Random.org service to get a batch of random numbers
-      // get config.poolSize numbers (default to 5000) to last for a while
+      // get config.poolSize numbers to last for a while
       const numbers = await randomOrgService.getRandomNumbers(
         dieType,
         config.poolSize

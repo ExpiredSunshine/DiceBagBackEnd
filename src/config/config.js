@@ -26,7 +26,7 @@ const config = {
   },
 
   // Dice Pool Configuration
-  poolSize: 5000, // Number of random numbers to fetch per API call
+  poolSize: 100, // Number of random numbers to fetch per API call
   maxDicePerRoll: 100, // Maximum dice that can be rolled in one request
 };
 
