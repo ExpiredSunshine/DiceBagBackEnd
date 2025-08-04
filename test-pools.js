@@ -48,7 +48,8 @@ class PoolTester {
 
   async registerUser() {
     this.log("🔐 Registering test user...");
-    const result = await this.makeRequest("POST", "/register", {
+    const result = await this.makeRequest("POST", "/signup", {
+      name: "Test User",
       email: TEST_USER_EMAIL,
       password: TEST_USER_PASSWORD,
     });
@@ -63,7 +64,7 @@ class PoolTester {
 
   async loginUser() {
     this.log("🔐 Logging in test user...");
-    const result = await this.makeRequest("POST", "/login", {
+    const result = await this.makeRequest("POST", "/signin", {
       email: TEST_USER_EMAIL,
       password: TEST_USER_PASSWORD,
     });

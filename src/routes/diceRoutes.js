@@ -61,6 +61,14 @@ router.get("/health", (req, res) => {
 
 // Optional authentication middleware
 const optionalAuth = async (req, res, next) => {
+  const { authorization } = req.headers;
+
+  if (!authorization || !authorization.startsWith("Bearer ")) {
+    // No authorization header, continue as anonymous user
+    req.user = null;
+    return next();
+  }
+
   try {
     await auth(req, res, next);
   } catch (error) {
