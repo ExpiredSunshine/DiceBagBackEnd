@@ -7,6 +7,7 @@ require("dotenv").config();
 const { config, validateConfig } = require("./src/config/config");
 const diceRoutes = require("./src/routes/diceRoutes");
 const userRoutes = require("./src/routes/userRoutes");
+const historyRoutes = require("./src/routes/historyRoutes");
 const errorHandler = require("./src/middleware/errorHandler");
 const { NotFoundError } = require("./src/utils/error-classes");
 
@@ -52,7 +53,7 @@ app.use(
   cors({
     origin: config.corsOrigin,
     credentials: true,
-    methods: ["GET", "POST", "PATCH"],
+    methods: ["GET", "POST", "PATCH", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization", "X-Admin-Key"],
   })
 );
@@ -72,6 +73,7 @@ app.use((req, res, next) => {
 // Routes
 app.use("/api/dice", diceRoutes);
 app.use("/api", userRoutes); // Add user routes
+app.use("/api/history", historyRoutes); // Add history routes
 
 // Basic route
 app.get("/", (req, res) => {

@@ -37,6 +37,34 @@ const userSchema = new mongoose.Schema(
       select: false,
       minlength: 6,
     },
+    rollHistory: {
+      type: [
+        {
+          id: {
+            type: String,
+            required: true,
+          },
+          timestamp: {
+            type: Date,
+            required: true,
+          },
+          diceRolled: {
+            type: String,
+            required: true,
+          },
+          total: {
+            type: Number,
+            required: true,
+          },
+          details: {
+            type: Array,
+            required: true,
+          },
+        },
+      ],
+      default: [],
+      maxlength: 200, // Limit to 200 entries
+    },
   },
   {
     timestamps: true,
