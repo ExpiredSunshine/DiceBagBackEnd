@@ -35,7 +35,11 @@ const validateDiceQuantities = (req, res, next) => {
       throw new BadRequestError(`Invalid die type: ${dieType}`);
     }
 
-    if (typeof quantity !== "number" || quantity < 0 || quantity > MAX_DICE_PER_TYPE) {
+    if (
+      typeof quantity !== "number" ||
+      quantity < 0 ||
+      quantity > MAX_DICE_PER_TYPE
+    ) {
       throw new BadRequestError(
         `Invalid quantity for ${dieType}: must be 0-${MAX_DICE_PER_TYPE}`
       );

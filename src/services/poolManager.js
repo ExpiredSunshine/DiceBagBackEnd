@@ -9,14 +9,14 @@ class PoolManagerService {
   constructor() {
     // Track which pools are currently being refilled to prevent multiple refills at once
     this.refillInProgress = new Set();
-    
+
     // Statistics to monitor how the service is performing
     this.stats = {
       totalRolls: 0,
       totalApiCalls: 0,
       lastRefill: {},
     };
-    
+
     // Constants
     this.MAX_DICE_PER_TYPE = MAX_DICE_PER_TYPE;
     this.DIE_TYPES = DIE_TYPES;
@@ -29,7 +29,7 @@ class PoolManagerService {
    * @returns {Promise<Object>} The pool document
    */
   async _getPool(dieType, userId = null) {
-    return userId 
+    return userId
       ? await poolPersistence.getOrCreateUserPool(userId, dieType)
       : await poolPersistence.getOrCreatePublicPool(dieType);
   }
@@ -41,29 +41,33 @@ class PoolManagerService {
    * @returns {Promise<number>} A random number for that die type
    */
   async getNextNumber(dieType, userId = null) {
-    const poolType = userId ? 'user' : 'public';
+    const poolType = userId ? "user" : "public";
     const poolKey = userId ? `${userId}-${dieType}` : dieType;
-    
+
     // Get the pool and ensure it has numbers
     let pool = await this._getPool(dieType, userId);
-    
+
     if (pool.numbers.length === 0) {
       await this.refillPool(dieType, userId);
       pool = await this._getPool(dieType, userId);
-      
+
       if (pool.numbers.length === 0) {
-        throw new BadRequestError(`Failed to refill ${poolType} pool for ${dieType}`);
+        throw new BadRequestError(
+          `Failed to refill ${poolType} pool for ${dieType}`
+        );
       }
     }
-    
+
     // Take the first number from the pool
     const number = pool.numbers.shift();
     await poolPersistence.updatePoolNumbers(pool._id, pool.numbers, poolType);
-    
+
     // Increment roll counter
     this.stats.totalRolls++;
-    
-    console.log(`[PoolManager] Retrieved ${number} for ${poolType} ${dieType} (${pool.numbers.length} remaining)`);
+
+    console.log(
+      `[PoolManager] Retrieved ${number} for ${poolType} ${dieType} (${pool.numbers.length} remaining)`
+    );
     return number;
   }
 
@@ -73,13 +77,17 @@ class PoolManagerService {
    * @param {string} userId - User ID (null for public pool)
    */
   async refillPool(dieType, userId = null) {
-    const poolType = userId ? 'user' : 'public';
+    const poolType = userId ? "user" : "public";
     const poolKey = userId ? `${userId}-${dieType}` : dieType;
-    const refillSize = userId ? config.pools.user.size : config.pools.public.size;
-    
+    const refillSize = userId
+      ? config.pools.user.size
+      : config.pools.public.size;
+
     // Prevent multiple refills of the same pool happening at once
     if (this.refillInProgress.has(poolKey)) {
-      console.log(`[PoolManager] Refill already in progress for ${poolType} ${dieType}`);
+      console.log(
+        `[PoolManager] Refill already in progress for ${poolType} ${dieType}`
+      );
       // Wait for the existing refill to complete before proceeding
       while (this.refillInProgress.has(poolKey)) {
         await new Promise((resolve) => setTimeout(resolve, 100));
@@ -91,25 +99,35 @@ class PoolManagerService {
     this.refillInProgress.add(poolKey);
 
     try {
-      console.log(`[PoolManager] Starting refill for ${poolType} ${dieType} with ${refillSize} numbers`);
+      console.log(
+        `[PoolManager] Starting refill for ${poolType} ${dieType} with ${refillSize} numbers`
+      );
 
       // Call Random.org service to get a batch of random numbers
-      const numbers = await randomOrgService.getRandomNumbers(dieType, refillSize);
+      const numbers = await randomOrgService.getRandomNumbers(
+        dieType,
+        refillSize
+      );
 
       // Get or create the pool and update it
-      const pool = userId 
+      const pool = userId
         ? await poolPersistence.getOrCreateUserPool(userId, dieType)
         : await poolPersistence.getOrCreatePublicPool(dieType);
-      
+
       await poolPersistence.updatePoolNumbers(pool._id, numbers, poolType);
 
       // Update statistics
       this.stats.totalApiCalls++;
       this.stats.lastRefill[poolKey] = new Date().toISOString();
 
-      console.log(`[PoolManager] Refill completed for ${poolType} ${dieType}: ${numbers.length} numbers added`);
+      console.log(
+        `[PoolManager] Refill completed for ${poolType} ${dieType}: ${numbers.length} numbers added`
+      );
     } catch (error) {
-      console.error(`[PoolManager] Refill failed for ${poolType} ${dieType}:`, error.message);
+      console.error(
+        `[PoolManager] Refill failed for ${poolType} ${dieType}:`,
+        error.message
+      );
       throw error;
     } finally {
       // Always remove the pool from the refill tracking, even if there was an error
@@ -131,11 +149,15 @@ class PoolManagerService {
     }
 
     if (quantity > this.MAX_DICE_PER_TYPE) {
-      throw new BadRequestError(`Maximum ${this.MAX_DICE_PER_TYPE} dice per die type allowed, requested: ${quantity}`);
+      throw new BadRequestError(
+        `Maximum ${this.MAX_DICE_PER_TYPE} dice per die type allowed, requested: ${quantity}`
+      );
     }
 
-    const poolType = userId ? 'user' : 'public';
-    console.log(`[PoolManager] Getting ${quantity} numbers for ${poolType} ${dieType}`);
+    const poolType = userId ? "user" : "public";
+    console.log(
+      `[PoolManager] Getting ${quantity} numbers for ${poolType} ${dieType}`
+    );
 
     // Validate roll request for public pool
     if (!userId) {
@@ -161,17 +183,17 @@ class PoolManagerService {
    */
   async getPoolStatus(userId = null) {
     const status = {};
-    
+
     for (const dieType of this.DIE_TYPES) {
       const pool = await this._getPool(dieType, userId);
       const poolKey = userId ? `${userId}-${dieType}` : dieType;
-      
+
       status[dieType] = {
         remaining: pool.numbers.length,
         lastRefill: this.stats.lastRefill[poolKey] || pool.lastRefill,
       };
     }
-    
+
     return status;
   }
 
@@ -181,7 +203,7 @@ class PoolManagerService {
    */
   async getStats() {
     const usageStats = await usageTracker.getUsageStats();
-    
+
     return {
       ...this.stats,
       usageStats,
@@ -189,4 +211,4 @@ class PoolManagerService {
   }
 }
 
-module.exports = new PoolManagerService(); 
+module.exports = new PoolManagerService();

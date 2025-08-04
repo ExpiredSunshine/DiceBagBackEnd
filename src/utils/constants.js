@@ -7,4 +7,4 @@ module.exports = {
   DIE_TYPES,
   MAX_DICE_PER_TYPE,
   LOW_POOL_THRESHOLD,
-}; 
+};
