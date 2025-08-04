@@ -7,6 +7,9 @@ const auth = require("../middleware/auth");
 
 const router = express.Router();
 
+// Constants
+const { DIE_TYPES, MAX_DICE_PER_TYPE } = require("../utils/constants");
+
 // Input validation middleware
 const validateDiceQuantities = (req, res, next) => {
   const { diceQuantities } = req.body;
@@ -16,7 +19,6 @@ const validateDiceQuantities = (req, res, next) => {
   }
 
   // Validate each die type and quantity
-  const validDieTypes = ["d4", "d6", "d8", "d10", "d12", "d20", "d100"];
   const totalDice = Object.values(diceQuantities).reduce(
     (sum, qty) => sum + (qty || 0),
     0
@@ -29,13 +31,13 @@ const validateDiceQuantities = (req, res, next) => {
   }
 
   for (const [dieType, quantity] of Object.entries(diceQuantities)) {
-    if (!validDieTypes.includes(dieType)) {
+    if (!DIE_TYPES.includes(dieType)) {
       throw new BadRequestError(`Invalid die type: ${dieType}`);
     }
 
-    if (typeof quantity !== "number" || quantity < 0 || quantity > 50) {
+    if (typeof quantity !== "number" || quantity < 0 || quantity > MAX_DICE_PER_TYPE) {
       throw new BadRequestError(
-        `Invalid quantity for ${dieType}: must be 0-50`
+        `Invalid quantity for ${dieType}: must be 0-${MAX_DICE_PER_TYPE}`
       );
     }
   }

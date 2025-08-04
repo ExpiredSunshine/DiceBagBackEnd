@@ -1,11 +1,12 @@
 const mongoose = require("mongoose");
+const { DIE_TYPES } = require("../utils/constants");
 
 const publicPoolSchema = new mongoose.Schema(
   {
     dieType: {
       type: String,
       required: true,
-      enum: ["d4", "d6", "d8", "d10", "d12", "d20", "d100"],
+      enum: DIE_TYPES,
       unique: true,
     },
     numbers: {

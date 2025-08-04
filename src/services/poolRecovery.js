@@ -1,7 +1,14 @@
 const poolPersistence = require("./poolPersistence");
 const poolManager = require("./poolManager");
+const { DIE_TYPES, LOW_POOL_THRESHOLD } = require("../utils/constants");
 
 class PoolRecoveryService {
+  constructor() {
+    // Constants
+    this.DIE_TYPES = DIE_TYPES;
+    this.LOW_POOL_THRESHOLD = LOW_POOL_THRESHOLD;
+  }
+
   /**
    * Initialize all pools on server startup
    * This ensures pools exist and are ready for use
@@ -10,10 +17,8 @@ class PoolRecoveryService {
     try {
       console.log("[PoolRecovery] Starting pool initialization...");
 
-      const dieTypes = ["d4", "d6", "d8", "d10", "d12", "d20", "d100"];
-
       // Initialize public pools
-      for (const dieType of dieTypes) {
+      for (const dieType of this.DIE_TYPES) {
         try {
           await poolPersistence.getOrCreatePublicPool(dieType);
           console.log(`[PoolRecovery] Public pool for ${dieType} initialized`);
@@ -83,9 +88,9 @@ class PoolRecoveryService {
       const poolStatus = await poolManager.getPoolStatus();
       const stats = await poolManager.getStats();
 
-      // Check if any pools are critically low (less than 10 numbers)
+      // Check if any pools are critically low
       const lowPools = Object.entries(poolStatus).filter(
-        ([dieType, status]) => status.remaining < 10
+        ([dieType, status]) => status.remaining < this.LOW_POOL_THRESHOLD
       );
 
       return {

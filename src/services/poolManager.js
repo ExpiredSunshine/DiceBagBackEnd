@@ -3,6 +3,7 @@ const usageTracker = require("./usageTracker");
 const randomOrgService = require("./randomOrgService");
 const { config } = require("../config/config");
 const { BadRequestError } = require("../utils/error-classes");
+const { DIE_TYPES, MAX_DICE_PER_TYPE } = require("../utils/constants");
 
 class PoolManagerService {
   constructor() {
@@ -15,6 +16,22 @@ class PoolManagerService {
       totalApiCalls: 0,
       lastRefill: {},
     };
+    
+    // Constants
+    this.MAX_DICE_PER_TYPE = MAX_DICE_PER_TYPE;
+    this.DIE_TYPES = DIE_TYPES;
+  }
+
+  /**
+   * Get or create a pool for the given die type and user
+   * @param {string} dieType - Which die type to get a pool for
+   * @param {string} userId - User ID (null for public pool)
+   * @returns {Promise<Object>} The pool document
+   */
+  async _getPool(dieType, userId = null) {
+    return userId 
+      ? await poolPersistence.getOrCreateUserPool(userId, dieType)
+      : await poolPersistence.getOrCreatePublicPool(dieType);
   }
 
   /**
@@ -27,31 +44,16 @@ class PoolManagerService {
     const poolType = userId ? 'user' : 'public';
     const poolKey = userId ? `${userId}-${dieType}` : dieType;
     
-    // Check if the pool is empty and refill it if needed
-    const pool = userId 
-      ? await poolPersistence.getOrCreateUserPool(userId, dieType)
-      : await poolPersistence.getOrCreatePublicPool(dieType);
+    // Get the pool and ensure it has numbers
+    let pool = await this._getPool(dieType, userId);
     
     if (pool.numbers.length === 0) {
       await this.refillPool(dieType, userId);
-      // Get the pool again after refill
-      const refreshedPool = userId 
-        ? await poolPersistence.getOrCreateUserPool(userId, dieType)
-        : await poolPersistence.getOrCreatePublicPool(dieType);
+      pool = await this._getPool(dieType, userId);
       
-      if (refreshedPool.numbers.length === 0) {
+      if (pool.numbers.length === 0) {
         throw new BadRequestError(`Failed to refill ${poolType} pool for ${dieType}`);
       }
-      
-      // Take the first number from the pool
-      const number = refreshedPool.numbers.shift();
-      await poolPersistence.updatePoolNumbers(refreshedPool._id, refreshedPool.numbers, poolType);
-      
-      // Increment roll counter
-      this.stats.totalRolls++;
-      
-      console.log(`[PoolManager] Retrieved ${number} for ${poolType} ${dieType} (${refreshedPool.numbers.length} remaining)`);
-      return number;
     }
     
     // Take the first number from the pool
@@ -128,8 +130,8 @@ class PoolManagerService {
       return [];
     }
 
-    if (quantity > 50) {
-      throw new BadRequestError(`Maximum 50 dice per die type allowed, requested: ${quantity}`);
+    if (quantity > this.MAX_DICE_PER_TYPE) {
+      throw new BadRequestError(`Maximum ${this.MAX_DICE_PER_TYPE} dice per die type allowed, requested: ${quantity}`);
     }
 
     const poolType = userId ? 'user' : 'public';
@@ -159,13 +161,9 @@ class PoolManagerService {
    */
   async getPoolStatus(userId = null) {
     const status = {};
-    const dieTypes = ["d4", "d6", "d8", "d10", "d12", "d20", "d100"];
     
-    for (const dieType of dieTypes) {
-      const pool = userId 
-        ? await poolPersistence.getOrCreateUserPool(userId, dieType)
-        : await poolPersistence.getOrCreatePublicPool(dieType);
-      
+    for (const dieType of this.DIE_TYPES) {
+      const pool = await this._getPool(dieType, userId);
       const poolKey = userId ? `${userId}-${dieType}` : dieType;
       
       status[dieType] = {
