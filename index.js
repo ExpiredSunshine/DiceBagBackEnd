@@ -10,6 +10,7 @@ const userRoutes = require("./src/routes/userRoutes");
 const historyRoutes = require("./src/routes/historyRoutes");
 const errorHandler = require("./src/middleware/errorHandler");
 const { NotFoundError } = require("./src/utils/error-classes");
+const poolRecovery = require("./src/services/poolRecovery");
 
 const app = express();
 const PORT = config.port;
@@ -17,7 +18,16 @@ const PORT = config.port;
 // Connect to MongoDB
 mongoose
   .connect(config.mongoUri)
-  .then(() => console.log("Connected to MongoDB"))
+  .then(async () => {
+    console.log("Connected to MongoDB");
+
+    // Initialize pools after database connection
+    try {
+      await poolRecovery.recoverPools();
+    } catch (error) {
+      console.error("Pool recovery failed:", error.message);
+    }
+  })
   .catch((err) => console.error("MongoDB connection error:", err));
 
 // Validate configuration on startup
