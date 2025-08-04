@@ -52,7 +52,7 @@ app.use(
   cors({
     origin: config.corsOrigin,
     credentials: true,
-    methods: ["GET", "POST"],
+    methods: ["GET", "POST", "PATCH"],
     allowedHeaders: ["Content-Type", "Authorization", "X-Admin-Key"],
   })
 );
