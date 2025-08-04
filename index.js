@@ -11,6 +11,7 @@ const historyRoutes = require("./src/routes/historyRoutes");
 const errorHandler = require("./src/middleware/errorHandler");
 const { NotFoundError } = require("./src/utils/error-classes");
 const poolRecovery = require("./src/services/poolRecovery");
+const cleanupService = require("./src/services/cleanupService");
 
 const app = express();
 const PORT = config.port;
@@ -26,6 +27,13 @@ mongoose
       await poolRecovery.recoverPools();
     } catch (error) {
       console.error("Pool recovery failed:", error.message);
+    }
+
+    // Start cleanup service for performance optimization
+    try {
+      cleanupService.startPeriodicCleanup(24); // Run cleanup every 24 hours
+    } catch (error) {
+      console.error("Cleanup service failed to start:", error.message);
     }
   })
   .catch((err) => console.error("MongoDB connection error:", err));
@@ -115,11 +123,13 @@ app.use(errorHandler);
 // Graceful shutdown
 process.on("SIGTERM", () => {
   console.log("SIGTERM received, shutting down gracefully");
+  cleanupService.stopPeriodicCleanup();
   process.exit(0);
 });
 
 process.on("SIGINT", () => {
   console.log("SIGINT received, shutting down gracefully");
+  cleanupService.stopPeriodicCleanup();
   process.exit(0);
 });
 

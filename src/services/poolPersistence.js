@@ -95,17 +95,28 @@ class PoolPersistenceService {
   }
 
   /**
-   * Increment today's roll count for a specific IP
+   * Increment today's roll count for a specific IP (optimized with upsert)
    * @param {number} increment - Number of rolls to add
    * @param {string} ipAddress - The IP address to track
    */
   async incrementTodayUsage(increment = 1, ipAddress) {
     try {
-      const usage = await this.getOrCreateTodayUsage(ipAddress);
-      usage.totalRolls += increment;
-      await usage.save();
+      const today = new Date();
+      today.setHours(0, 0, 0, 0); // Start of day
       
-      console.log(`[PoolPersistence] Incremented today's usage for IP ${ipAddress} by ${increment}, total: ${usage.totalRolls}`);
+      // Use findOneAndUpdate with upsert for better performance
+      const result = await PoolUsage.findOneAndUpdate(
+        { date: today, ipAddress },
+        { $inc: { totalRolls: increment } },
+        { 
+          upsert: true, 
+          new: true,
+          setDefaultsOnInsert: true 
+        }
+      );
+      
+      console.log(`[PoolPersistence] Incremented today's usage for IP ${ipAddress} by ${increment}, total: ${result.totalRolls}`);
+      return result;
     } catch (error) {
       console.error(`[PoolPersistence] Error incrementing today's usage for IP ${ipAddress}:`, error.message);
       throw error;
@@ -145,6 +156,58 @@ class PoolPersistenceService {
     } catch (error) {
       console.error(`[PoolPersistence] Error loading all pools:`, error.message);
       throw error;
+    }
+  }
+
+  /**
+   * Clean up old usage records (called periodically)
+   * @param {number} daysToKeep - Number of days to keep records
+   */
+  async cleanupOldUsageRecords(daysToKeep = 7) {
+    try {
+      const cutoffDate = new Date();
+      cutoffDate.setDate(cutoffDate.getDate() - daysToKeep);
+      
+      const result = await PoolUsage.deleteMany({ date: { $lt: cutoffDate } });
+      
+      console.log(`[PoolPersistence] Cleaned up ${result.deletedCount} old usage records older than ${daysToKeep} days`);
+      
+      return result.deletedCount;
+    } catch (error) {
+      console.error(`[PoolPersistence] Error cleaning up old usage records:`, error.message);
+      throw error;
+    }
+  }
+
+  /**
+   * Get usage statistics for monitoring
+   * @returns {Promise<Object>} Usage statistics
+   */
+  async getUsageStatistics() {
+    try {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      const totalRecords = await PoolUsage.countDocuments();
+      const todayRecords = await PoolUsage.countDocuments({ date: today });
+      const totalRolls = await PoolUsage.aggregate([
+        { $group: { _id: null, total: { $sum: "$totalRolls" } } }
+      ]);
+      
+      return {
+        totalRecords,
+        todayRecords,
+        totalRolls: totalRolls[0]?.total || 0,
+        timestamp: new Date().toISOString(),
+      };
+    } catch (error) {
+      console.error(`[PoolPersistence] Error getting usage statistics:`, error.message);
+      return {
+        totalRecords: 0,
+        todayRecords: 0,
+        totalRolls: 0,
+        timestamp: new Date().toISOString(),
+      };
     }
   }
 }

@@ -1,5 +1,7 @@
 const express = require("express");
 const poolManager = require("../services/poolManager");
+const poolPersistence = require("../services/poolPersistence");
+const cleanupService = require("../services/cleanupService");
 const { diceRollLimiter } = require("../middleware/rateLimiter");
 const { config } = require("../config/config");
 const { BadRequestError } = require("../utils/error-classes");
@@ -169,9 +171,29 @@ router.get("/stats", async (req, res, next) => {
     console.log(`[API] Stats requested from ${req.ip}`);
 
     const stats = await poolManager.getStats();
+    const usageStats = await poolPersistence.getUsageStatistics();
 
     res.json({
       stats,
+      usageStats,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Get performance monitoring data
+router.get("/monitor", async (req, res, next) => {
+  try {
+    console.log(`[API] Monitor data requested from ${req.ip}`);
+
+    const usageStats = await poolPersistence.getUsageStatistics();
+    const cleanupStatus = cleanupService.getStatus();
+
+    res.json({
+      usageStats,
+      cleanupStatus,
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
