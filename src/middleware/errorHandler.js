@@ -10,9 +10,8 @@ const {
  * @param {Error} error - The error that was thrown
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
- * @param {Function} next - Express next function (not used in error handlers)
  */
-const errorHandler = (error, req, res, next) => {
+const errorHandler = (error, req, res) => {
   // Log the error details
   console.error(`[ErrorHandler] ${error.name}: ${error.message}`);
   console.error(`[ErrorHandler] Stack:`, error.stack);

@@ -42,7 +42,7 @@ class PoolManagerService {
    */
   async getNextNumber(dieType, userId = null) {
     const poolType = userId ? "user" : "public";
-    const poolKey = userId ? `${userId}-${dieType}` : dieType;
+    const _poolKey = userId ? `${userId}-${dieType}` : dieType;
 
     // Get the pool and ensure it has numbers
     let pool = await this._getPool(dieType, userId);

@@ -90,7 +90,7 @@ class PoolRecoveryService {
 
       // Check if any pools are critically low
       const lowPools = Object.entries(poolStatus).filter(
-        ([dieType, status]) => status.remaining < this.LOW_POOL_THRESHOLD
+        ([, status]) => status.remaining < this.LOW_POOL_THRESHOLD
       );
 
       return {

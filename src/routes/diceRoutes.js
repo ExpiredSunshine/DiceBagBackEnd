@@ -71,7 +71,7 @@ const optionalAuth = async (req, res, next) => {
 
   try {
     await auth(req, res, next);
-  } catch (error) {
+  } catch {
     // If authentication fails, continue without user (anonymous access)
     req.user = null;
     next();
