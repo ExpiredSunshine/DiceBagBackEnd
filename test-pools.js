@@ -1,7 +1,7 @@
 const axios = require("axios");
 
 // Configuration
-const BASE_URL = "http://localhost:3000/api";
+const BASE_URL = "http://localhost:3001/api";
 const TEST_USER_EMAIL = "test@example.com";
 const TEST_USER_PASSWORD = "testpassword123";
 

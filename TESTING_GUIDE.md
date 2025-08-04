@@ -25,17 +25,17 @@ node test-pools.js
 #### 1.1 Basic Anonymous Rolls
 ```bash
 # Single d6 roll
-curl -X POST http://localhost:3000/api/dice/roll \
+curl -X POST http://localhost:3001/api/dice/roll \
   -H "Content-Type: application/json" \
   -d '{"diceQuantities": {"d6": 1}}'
 
 # Multiple dice roll
-curl -X POST http://localhost:3000/api/dice/roll \
+curl -X POST http://localhost:3001/api/dice/roll \
   -H "Content-Type: application/json" \
   -d '{"diceQuantities": {"d6": 3, "d20": 2, "d4": 1}}'
 
 # All die types
-curl -X POST http://localhost:3000/api/dice/roll \
+curl -X POST http://localhost:3001/api/dice/roll \
   -H "Content-Type: application/json" \
   -d '{"diceQuantities": {"d4": 2, "d6": 2, "d8": 2, "d10": 2, "d12": 2, "d20": 2, "d100": 2}}'
 ```
@@ -68,7 +68,7 @@ curl -X GET http://localhost:3000/api/dice/pools/public
 # Run this script to test the 50 roll limit
 for i in {1..55}; do
   echo "Roll $i:"
-  curl -X POST http://localhost:3000/api/dice/roll \
+  curl -X POST http://localhost:3001/api/dice/roll \
     -H "Content-Type: application/json" \
     -d '{"diceQuantities": {"d6": 1}}' | jq '.grandTotal'
   sleep 0.1
@@ -83,14 +83,14 @@ done
 
 #### 2.1 Register a Test User
 ```bash
-curl -X POST http://localhost:3000/api/register \
+curl -X POST http://localhost:3001/api/register \
   -H "Content-Type: application/json" \
   -d '{"email": "test@example.com", "password": "testpassword123"}'
 ```
 
 #### 2.2 Login and Get Token
 ```bash
-curl -X POST http://localhost:3000/api/login \
+curl -X POST http://localhost:3001/api/login \
   -H "Content-Type: application/json" \
   -d '{"email": "test@example.com", "password": "testpassword123"}'
 ```
@@ -103,13 +103,13 @@ curl -X POST http://localhost:3000/api/login \
 TOKEN="YOUR_TOKEN"
 
 # Single roll
-curl -X POST http://localhost:3000/api/dice/roll \
+curl -X POST http://localhost:3001/api/dice/roll \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $TOKEN" \
   -d '{"diceQuantities": {"d20": 1}}'
 
 # Large roll (should work without limits)
-curl -X POST http://localhost:3000/api/dice/roll \
+curl -X POST http://localhost:3001/api/dice/roll \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $TOKEN" \
   -d '{"diceQuantities": {"d6": 50, "d20": 25}}'
@@ -117,7 +117,7 @@ curl -X POST http://localhost:3000/api/dice/roll \
 
 #### 2.4 Check User Pool Status
 ```bash
-curl -X GET http://localhost:3000/api/dice/pools/user \
+curl -X GET http://localhost:3001/api/dice/pools/user \
   -H "Authorization: Bearer $TOKEN"
 ```
 
@@ -127,21 +127,21 @@ curl -X GET http://localhost:3000/api/dice/pools/user \
 ```bash
 # Make many rolls to trigger refill
 for i in {1..100}; do
-  curl -X POST http://localhost:3000/api/dice/roll \
+  curl -X POST http://localhost:3001/api/dice/roll \
     -H "Content-Type: application/json" \
     -d '{"diceQuantities": {"d6": 1}}' > /dev/null
   echo "Roll $i completed"
 done
 
 # Check pool status after refill
-curl -X GET http://localhost:3000/api/dice/pools/public | jq '.poolStatus.d6'
+curl -X GET http://localhost:3001/api/dice/pools/public | jq '.poolStatus.d6'
 ```
 
 #### 3.2 Test Concurrent Requests
 ```bash
 # Test 10 concurrent rolls
 for i in {1..10}; do
-  curl -X POST http://localhost:3000/api/dice/roll \
+  curl -X POST http://localhost:3001/api/dice/roll \
     -H "Content-Type: application/json" \
     -d '{"diceQuantities": {"d6": 1}}' &
 done
@@ -161,12 +161,12 @@ curl -X GET http://localhost:3000/api/dice/monitor
 ```bash
 # Test from different IPs (if possible)
 # Or test with different user agents
-curl -X POST http://localhost:3000/api/dice/roll \
+curl -X POST http://localhost:3001/api/dice/roll \
   -H "Content-Type: application/json" \
   -H "User-Agent: TestClient1" \
   -d '{"diceQuantities": {"d6": 1}}'
 
-curl -X POST http://localhost:3000/api/dice/roll \
+curl -X POST http://localhost:3001/api/dice/roll \
   -H "Content-Type: application/json" \
   -H "User-Agent: TestClient2" \
   -d '{"diceQuantities": {"d6": 1}}'
@@ -213,10 +213,10 @@ curl -X POST http://localhost:3000/api/dice/roll \
 ### **Debug Commands:**
 ```bash
 # Check server health
-curl -X GET http://localhost:3000/api/health
+curl -X GET http://localhost:3001/api/health
 
 # Check database connection
-curl -X GET http://localhost:3000/api/dice/health
+curl -X GET http://localhost:3001/api/dice/health
 
 # View server logs
 tail -f logs/app.log
@@ -229,7 +229,7 @@ tail -f logs/app.log
 # Install Apache Bench (ab)
 # Test 1000 requests with 10 concurrent users
 ab -n 1000 -c 10 -H "Content-Type: application/json" \
-  -p test-data.json http://localhost:3000/api/dice/roll
+  -p test-data.json http://localhost:3001/api/dice/roll
 ```
 
 ### **Test Data File (test-data.json):**
