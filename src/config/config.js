@@ -13,6 +13,14 @@ const config = {
   // Security Configuration
   corsOrigin: process.env.FRONTEND_URL || "http://localhost:5173",
 
+  // JWT Configuration
+  jwtSecret:
+    process.env.JWT_SECRET || "your-super-secret-jwt-key-change-in-production",
+  jwtExpiresIn: "7d",
+
+  // Database Configuration
+  mongoUri: process.env.MONGO_URI || "mongodb://localhost:27017/dicebag",
+
   // Rate Limiting
   rateLimits: {
     diceRoll: {

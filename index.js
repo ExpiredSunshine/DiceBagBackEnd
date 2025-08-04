@@ -1,15 +1,23 @@
 const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
+const mongoose = require("mongoose");
 require("dotenv").config();
 
 const { config, validateConfig } = require("./src/config/config");
 const diceRoutes = require("./src/routes/diceRoutes");
+const userRoutes = require("./src/routes/userRoutes");
 const errorHandler = require("./src/middleware/errorHandler");
 const { NotFoundError } = require("./src/utils/error-classes");
 
 const app = express();
 const PORT = config.port;
+
+// Connect to MongoDB
+mongoose
+  .connect(config.mongoUri)
+  .then(() => console.log("Connected to MongoDB"))
+  .catch((err) => console.error("MongoDB connection error:", err));
 
 // Validate configuration on startup
 try {
@@ -63,6 +71,7 @@ app.use((req, res, next) => {
 
 // Routes
 app.use("/api/dice", diceRoutes);
+app.use("/api", userRoutes); // Add user routes
 
 // Basic route
 app.get("/", (req, res) => {
