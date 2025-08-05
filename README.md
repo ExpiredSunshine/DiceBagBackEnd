@@ -38,5 +38,5 @@ A high-performance, secure REST API for true random dice rolling powered by RAND
 - **Pool Persistence**: Database operations for pool management
 - **Cleanup Service**: Periodic cleanup of old records
 
-- [DiceBag Frontend](https://github.com/your-org/dicebag-frontend) - React-based frontend application
+- [DiceBag Frontend](https://github.com/ExpiredSunshine/DiceBagFrontEnd)
 - [RANDOM.ORG API](https://api.random.org/) - True random number generation service
