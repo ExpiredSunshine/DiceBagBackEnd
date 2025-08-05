@@ -30,22 +30,6 @@ A high-performance, secure REST API for true random dice rolling powered by RAND
 - **Monitoring**: Built-in performance monitoring and statistics
 - **Cleanup Service**: Automatic cleanup of old usage records
 
-## 🏗️ Architecture
-
-```
-DiceBag Backend/
-├── src/
-│   ├── config/          # Configuration management
-│   ├── errors/          # Custom error classes
-│   ├── middleware/      # Express middleware
-│   ├── models/          # MongoDB schemas
-│   ├── routes/          # API route handlers
-│   ├── services/        # Logic services
-│   └── utils/           # Utility functions
-├── index.js             # Application entry point
-└── package.json         # Dependencies and scripts
-```
-
 ### Key Components
 
 - **Pool Manager**: Manages dual pool system (public/user)
