@@ -27,7 +27,6 @@ const userPoolSchema = new mongoose.Schema(
   }
 );
 
-// Compound index for efficient queries
 userPoolSchema.index({ userId: 1, dieType: 1 }, { unique: true });
 
 module.exports = mongoose.model("UserPool", userPoolSchema);

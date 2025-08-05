@@ -14,12 +14,12 @@ class RandomOrgService {
   /**
    * Fetches random numbers from Random.org API for a specific die type
    * @param {string} dieType - The type of die (d4, d6, d8, d10, d12, d20, d100)
-   * @param {number} quantity - Number of random numbers to fetch (default: config.poolSize)
+   * @param {number} quantity - Number of random numbers to fetch
    * @returns {Promise<Array<number>>} Array of random numbers
    * @throws {BadRequestError} If die type is invalid
    * @throws {ConflictError} If API quota is exceeded
    */
-  async getRandomNumbers(dieType, quantity = config.poolSize) {
+  async getRandomNumbers(dieType, quantity) {
     // Generate unique request ID for tracking
     const requestId = ++this.requestId;
 

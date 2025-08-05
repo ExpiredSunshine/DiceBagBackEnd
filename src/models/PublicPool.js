@@ -23,7 +23,6 @@ const publicPoolSchema = new mongoose.Schema(
   }
 );
 
-// Index for efficient queries
 publicPoolSchema.index({ dieType: 1 });
 
 module.exports = mongoose.model("PublicPool", publicPoolSchema);

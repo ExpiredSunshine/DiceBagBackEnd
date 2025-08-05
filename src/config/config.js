@@ -15,7 +15,15 @@ const config = {
 
   // JWT Configuration
   jwtSecret:
-    process.env.JWT_SECRET || "your-super-secret-jwt-key-change-in-production",
+    process.env.JWT_SECRET ||
+    (() => {
+      if (process.env.NODE_ENV === "production") {
+        throw new Error(
+          "JWT_SECRET environment variable is required in production"
+        );
+      }
+      return "development-jwt-secret-change-in-production";
+    })(),
   jwtExpiresIn: "7d",
 
   // Database Configuration
@@ -33,10 +41,9 @@ const config = {
     },
   },
 
-  // Dice Pool Configuration
-  poolSize: 100, // Number of random numbers to fetch per API call (legacy)
+  // Dice Roll Configuration
   maxDicePerRoll: 100, // Maximum dice that can be rolled in one request
-  
+
   // Dual Pool Configuration
   pools: {
     public: {
@@ -65,6 +72,13 @@ const validateConfig = () => {
     )
   ) {
     throw new BadRequestError("Invalid RANDOM_ORG_API_KEY format");
+  }
+
+  // Validate JWT secret in production
+  if (process.env.NODE_ENV === "production" && !process.env.JWT_SECRET) {
+    throw new BadRequestError(
+      "JWT_SECRET environment variable is required in production"
+    );
   }
 };
 

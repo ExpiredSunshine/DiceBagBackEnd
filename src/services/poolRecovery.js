@@ -48,7 +48,6 @@ class PoolRecoveryService {
         "[PoolRecovery] Error during pool initialization:",
         error.message
       );
-      // Don't throw error to prevent server startup failure
     }
   }
 
@@ -75,7 +74,6 @@ class PoolRecoveryService {
         "[PoolRecovery] Error during pool recovery:",
         error.message
       );
-      // Don't throw error to prevent server startup failure
     }
   }
 

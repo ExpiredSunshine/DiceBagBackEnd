@@ -2,7 +2,6 @@ const rateLimit = require("express-rate-limit");
 const { config } = require("../config/config");
 const { ConflictError } = require("../utils/error-classes");
 
-// Create rate limiters
 const createRateLimiter = (name, options) => {
   return rateLimit({
     windowMs: options.windowMs,
@@ -22,19 +21,16 @@ const createRateLimiter = (name, options) => {
         timestamp: new Date().toISOString(),
       });
     },
-    // Use the built-in IP key generator for proper IPv6 handling
     keyGenerator: rateLimit.ipKeyGenerator,
   });
 };
 
-// Dice roll rate limiter
 const diceRollLimiter = createRateLimiter("diceRoll", {
   windowMs: config.rateLimits.diceRoll.windowMs,
   max: config.rateLimits.diceRoll.max,
   message: "Too many dice rolls, please try again later.",
 });
 
-// Pool status rate limiter
 const poolStatusLimiter = createRateLimiter("poolStatus", {
   windowMs: config.rateLimits.poolStatus.windowMs,
   max: config.rateLimits.poolStatus.max,

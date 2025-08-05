@@ -12,12 +12,10 @@ const {
 
 const router = express.Router();
 
-// Register new user
 router.post("/signup", async (req, res, next) => {
   try {
     const { name, email, password, avatar } = req.body;
 
-    // Validate input
     if (!name || !email || !password) {
       throw new BadRequestError("Name, email, and password are required");
     }
@@ -34,13 +32,11 @@ router.post("/signup", async (req, res, next) => {
       throw new BadRequestError("Invalid avatar URL");
     }
 
-    // Check if user already exists
     const existingUser = await User.findOne({ email: email.toLowerCase() });
     if (existingUser) {
       throw new ConflictError("User with this email already exists");
     }
 
-    // Create new user
     const user = new User({
       name,
       email: email.toLowerCase(),
@@ -50,12 +46,10 @@ router.post("/signup", async (req, res, next) => {
 
     await user.save();
 
-    // Generate JWT token
     const token = jwt.sign({ _id: user._id }, config.jwtSecret, {
       expiresIn: config.jwtExpiresIn,
     });
 
-    // Return user data (without password) and token
     const userResponse = user.toObject();
     delete userResponse.password;
 
@@ -68,7 +62,6 @@ router.post("/signup", async (req, res, next) => {
   }
 });
 
-// Login user
 router.post("/signin", async (req, res, next) => {
   try {
     const { email, password } = req.body;
@@ -77,7 +70,6 @@ router.post("/signin", async (req, res, next) => {
       throw new BadRequestError("Email and password are required");
     }
 
-    // Find user with password included
     const user = await User.findOne({ email: email.toLowerCase() }).select(
       "+password"
     );
@@ -86,18 +78,15 @@ router.post("/signin", async (req, res, next) => {
       throw new UnauthorizedError("Invalid email or password");
     }
 
-    // Check password
     const isPasswordValid = await user.comparePassword(password);
     if (!isPasswordValid) {
       throw new UnauthorizedError("Invalid email or password");
     }
 
-    // Generate JWT token
     const token = jwt.sign({ _id: user._id }, config.jwtSecret, {
       expiresIn: config.jwtExpiresIn,
     });
 
-    // Return user data (without password) and token
     const userResponse = user.toObject();
     delete userResponse.password;
 
@@ -110,7 +99,6 @@ router.post("/signin", async (req, res, next) => {
   }
 });
 
-// Get current user profile
 router.get("/users/me", auth, async (req, res, next) => {
   try {
     res.json({ user: req.user });
@@ -119,7 +107,6 @@ router.get("/users/me", auth, async (req, res, next) => {
   }
 });
 
-// Update user profile
 router.patch("/users/me", auth, async (req, res, next) => {
   try {
     const { name, email, avatar } = req.body;
@@ -137,7 +124,6 @@ router.patch("/users/me", auth, async (req, res, next) => {
         throw new BadRequestError("Invalid email format");
       }
 
-      // Check if email is already taken by another user
       const existingUser = await User.findOne({
         email: email.toLowerCase(),
         _id: { $ne: req.user._id },

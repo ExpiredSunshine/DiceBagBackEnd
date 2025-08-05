@@ -9,10 +9,8 @@ const auth = require("../middleware/auth");
 
 const router = express.Router();
 
-// Constants
 const { DIE_TYPES, MAX_DICE_PER_TYPE } = require("../utils/constants");
 
-// Input validation middleware
 const validateDiceQuantities = (req, res, next) => {
   const { diceQuantities } = req.body;
 
@@ -135,7 +133,7 @@ router.post(
   }
 );
 
-// Get public pool status (no authentication required)
+// Get public pool status
 router.get("/pools/public", async (req, res, next) => {
   try {
     console.log(`[API] Public pool status requested from ${req.ip}`);
@@ -153,7 +151,7 @@ router.get("/pools/public", async (req, res, next) => {
   }
 });
 
-// Get user pool status (authentication required)
+// Get user pool status
 router.get("/pools/user", auth, async (req, res, next) => {
   try {
     console.log(
